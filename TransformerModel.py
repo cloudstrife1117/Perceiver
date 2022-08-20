@@ -10,6 +10,7 @@ from ImagePositionEmbedding import ImagePosEmbed
 from CustomLayers import LatentArray, CrossAttentionTransformer, SelfAttentionTransformer
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.optimizers import Adam
 
 
 class TransformerModel:
@@ -63,3 +64,17 @@ class TransformerModel:
 
     def summary(self):
         self.model.summary()
+
+    def train(self, X_train, X_val, y_train, y_val, optimizer, lr, loss, metrics, epochs):
+        # Apply optimizer
+        if optimizer == 'adam':
+            opt = Adam(learning_rate=lr)
+        else:
+            raise ValueError("Optimizer doesn't exists!")
+
+        # Compile model
+        self.model.compile(optimizer=opt, loss=loss, metrics=metrics)
+
+        # Train model and record training history
+        history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs=epochs, shuffle=True, validation_data=(X_val, y_val))
+        self.history = history.history
