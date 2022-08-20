@@ -6,9 +6,9 @@ import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 from ImagePositionEmbedding import ImagePosEmbed
-from CustomLayers import LatentArray
+from CustomLayers import LatentArray, CrossAttention
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, LayerNormalization, Add, Dense, Dropout
+from tensorflow.keras.layers import Input
 
 
 class TransformerModel:
@@ -31,13 +31,16 @@ class TransformerModel:
         # Create Input layer
         inputs = Input(self.input_shape)
 
-        latent_array_layer = LatentArray(self.batch_size, self.latent_num, self.proj_dim)
-        latent_array = latent_array_layer.generate()
+        # inputs are passed to this function as a placeholder for the latent array generation, just to construct the
+        # functional model into a graph when it is called where the inputs isn't actually used
+        latent_array_layer = LatentArray(batch_size=self.batch_size, latent_num=self.latent_num, proj_dim=self.proj_dim)
+        latent_array = latent_array_layer(inputs)
 
         embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=inputs.shape[1]*inputs.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
         embeddings = embedding_layer(inputs)
 
-        outputs = embeddings
+        ca1_layer = CrossAttention(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        outputs = ca1_layer(latent_array, embeddings)
 
         model = Model(inputs=inputs, outputs=outputs)
 
