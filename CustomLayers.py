@@ -59,10 +59,29 @@ class CrossAttention(tf.keras.layers.Layer):
     def call(self, q_input, kv_input):
         q_norm1 = LayerNormalization(epsilon=1e-6)(q_input)
         kv_norm1 = LayerNormalization(epsilon=1e-6)(kv_input)
-        x_mha = self.mha_layer([q_norm1, kv_norm1, kv_norm1])
-        q_add1 = Add()([x_mha, q_input])
+        q_mha = self.mha_layer([q_norm1, kv_norm1, kv_norm1])
+        q_add1 = Add()([q_mha, q_input])
         q_norm2 = LayerNormalization(epsilon=1e-6)(q_add1)
         q_mlp1 = self.mlp_layer(q_norm2)
         q_add2 = Add()([q_mlp1, q_add1])
 
         return q_add2
+
+class SelfAttentionTransformer(tf.keras.layers.Layer):
+    def __init__(self, proj_dim, num_heads, dropout):
+        super(SelfAttentionTransformer, self).__init__()
+        self.proj_dim = proj_dim
+        self.num_heads = num_heads
+        self.dropout = dropout
+        self.mha_layer = MultiHeadAttention(head_size=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        self.mlp_layer = MLP(proj_dim=self.proj_dim, dropout=self.dropout)
+
+    def call(self, qkv_input):
+        qkv_norm = LayerNormalization(epsilon=1e-6)(qkv_input)
+        qkv_mha = self.mha_layer([qkv_norm, qkv_norm, qkv_norm])
+        qkv_add1 = Add()([qkv_mha, qkv_input])
+        qkv_norm2 = LayerNormalization(epsilon=1e-6)(qkv_add1)
+        qkv_mlp1 = self.mlp_layer(qkv_norm2)
+        qkv_add2 = Add()([qkv_mlp1, qkv_add1])
+
+        return qkv_add2
