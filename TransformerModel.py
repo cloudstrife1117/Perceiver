@@ -6,6 +6,7 @@ import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 from ImagePositionEmbedding import ImagePosEmbed
+from CustomLayers import LatentArray
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, LayerNormalization, Add, Dense, Dropout
 
@@ -29,6 +30,9 @@ class TransformerModel:
     def Perceiver(self):
         # Create Input layer
         inputs = Input(self.input_shape)
+
+        latent_array_layer = LatentArray(self.batch_size, self.latent_num, self.proj_dim)
+        latent_array = latent_array_layer.generate()
 
         embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=inputs.shape[1]*inputs.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
         embeddings = embedding_layer(inputs)
