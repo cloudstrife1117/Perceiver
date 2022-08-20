@@ -5,10 +5,11 @@
 import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+import tensorflow as tf
 from ImagePositionEmbedding import ImagePosEmbed
 from CustomLayers import LatentArray, CrossAttentionTransformer, SelfAttentionTransformer
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Input, Dense
 
 
 class TransformerModel:
@@ -50,10 +51,13 @@ class TransformerModel:
         latent1 = sa_layer1(latent1)
         latent1 = sa_layer2(latent1)
 
-        # Output
-        outputs = latent1
+        # Average the output of final Latent Transformer with the number of latents(index dimension)
+        mean_latent = tf.reduce_mean(latent1, axis=1)
 
-        model = Model(inputs=inputs, outputs=outputs)
+        # Pass the averaged latent trough a linear layer to output the number of classes of logits
+        logits = Dense(units=self.classes)(mean_latent)
+
+        model = Model(inputs=inputs, outputs=logits)
 
         return model
 
