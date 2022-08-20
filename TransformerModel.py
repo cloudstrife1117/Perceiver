@@ -6,7 +6,7 @@ import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 from ImagePositionEmbedding import ImagePosEmbed
-from CustomLayers import LatentArray, CrossAttention
+from CustomLayers import LatentArray, CrossAttention, SelfAttentionTransformer
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
 
@@ -36,11 +36,22 @@ class TransformerModel:
         latent_array_layer = LatentArray(batch_size=self.batch_size, latent_num=self.latent_num, proj_dim=self.proj_dim)
         latent_array = latent_array_layer(inputs)
 
+        # Generating position encodings Fourier Features or learnable positions and combining with input
         embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=inputs.shape[1]*inputs.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
         embeddings = embedding_layer(inputs)
 
-        ca1_layer = CrossAttention(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
-        outputs = ca1_layer(latent_array, embeddings)
+        # Construct the initial CrossAttention Transformer
+        ca_layer1 = CrossAttention(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        latent1 = ca_layer1(latent_array, embeddings)
+
+        # Construct the stacks of Latent Transformers
+        sa_layer1 = SelfAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        sa_layer2 = SelfAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        latent1 = sa_layer1(latent1)
+        latent1 = sa_layer2(latent1)
+
+        # Output
+        outputs = latent1
 
         model = Model(inputs=inputs, outputs=outputs)
 
