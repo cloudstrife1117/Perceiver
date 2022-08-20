@@ -67,6 +67,7 @@ class CrossAttentionTransformer(tf.keras.layers.Layer):
 
         return q_add2
 
+
 class SelfAttentionTransformer(tf.keras.layers.Layer):
     def __init__(self, proj_dim, num_heads, dropout):
         super(SelfAttentionTransformer, self).__init__()

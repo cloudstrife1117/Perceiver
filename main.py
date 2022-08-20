@@ -5,6 +5,7 @@
 import tensorflow as tf
 from TransformerModel import TransformerModel
 
+
 def main():
     # Load Cifar-10 Dataset
     # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()

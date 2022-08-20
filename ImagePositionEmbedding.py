@@ -37,4 +37,3 @@ class ImagePosEmbed(layers.Layer):
             raise ValueError("Position Embedding Method doesn't exist!")
 
         return x
-
