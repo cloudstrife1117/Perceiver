@@ -4,11 +4,18 @@
 """
 import tensorflow as tf
 from TransformerModel import TransformerModel
-
+from tensorflow.keras.losses import SparseCategoricalCrossentropy
+from tensorflow.keras.metrics import SparseCategoricalAccuracy
 
 def main():
     # Load Cifar-10 Dataset
-    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
+    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
+
+    optimizer = "adam"
+    learning_rate = 0.001
+    loss_function = SparseCategoricalCrossentropy(from_logits=True)
+    metrics = [SparseCategoricalAccuracy(name='Acc')]
+    epochs = 10
 
     Perceiver = TransformerModel(input_shape=(32, 32, 3),
                                  batch_size=20,
@@ -21,6 +28,16 @@ def main():
                                  posEmbed="FF")
 
     Perceiver.summary()
+
+    Perceiver.train(X_train=X_train,
+                    X_val=X_test,
+                    y_train=y_train,
+                    y_val=y_test,
+                    optimizer=optimizer,
+                    lr=learning_rate,
+                    loss=loss_function,
+                    metrics=metrics,
+                    epochs=epochs)
 
 
 if __name__ == "__main__":
