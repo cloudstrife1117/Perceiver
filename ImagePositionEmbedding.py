@@ -21,7 +21,7 @@ class ImagePosEmbed(layers.Layer):
             self.pos_embedding = learnable_pos_embedding(pos_num=pos_num, proj_dim=self.proj_dim)
 
     def call(self, x):
-        x = tf.cast(x, dtype=tf.float64)
+        x = tf.cast(x, dtype=tf.float32)
         x = x / 255.  # Normalize Image Values
         input_space = (x.shape[1], x.shape[2])
         x = tf.reshape(x, [-1, x.shape[1] * x.shape[2], x.shape[3]])

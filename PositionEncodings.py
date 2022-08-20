@@ -39,6 +39,7 @@ def generate_coordinate_positions(input_space):
     pos = tf.meshgrid(*dim_ranges)
     pos = tf.stack(pos, axis=dim)
     pos = tf.reshape(pos, [-1, dim])
+    pos = tf.cast(pos, dtype=tf.float32)
 
     return pos
 
@@ -48,12 +49,12 @@ def generate_fourier_features(num_bands, input_space):
     pos = generate_coordinate_positions(input_space)
     # Generate Nyquist frequency(k evenly spaced frequencies between 1 and mu/2) for each dimension with k bands
     frequencies = tf.stack([tf.linspace(start=1., stop=space/2., num=num_bands) for space in input_space], axis=0)
-    frequencies = tf.cast(frequencies, dtype=tf.float64)
+    frequencies = tf.cast(frequencies, dtype=tf.float32)
     # Multiply the frequencies of each dimension with the according dimension of the position
     fourier_features = pos[:, :, None] * frequencies[None, :, :]
     fourier_features = tf.reshape(fourier_features, [-1, fourier_features.shape[1]*fourier_features.shape[2]])
     # Generate Pi Constant
-    pi = tf.constant(math.pi, dtype=tf.float64)
+    pi = tf.constant(math.pi, dtype=tf.float32)
     # Calculate the Sin and Cos Fourier Features
     fourier_features = tf.concat([tf.math.sin(tf.math.multiply(pi, fourier_features)),
                                   tf.math.cos(tf.math.multiply(pi, fourier_features))], axis=1)
