@@ -6,7 +6,7 @@ import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 from ImagePositionEmbedding import ImagePosEmbed
-from CustomLayers import LatentArray, CrossAttention, SelfAttentionTransformer
+from CustomLayers import LatentArray, CrossAttentionTransformer, SelfAttentionTransformer
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
 
@@ -41,7 +41,7 @@ class TransformerModel:
         embeddings = embedding_layer(inputs)
 
         # Construct the initial CrossAttention Transformer
-        ca_layer1 = CrossAttention(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
+        ca_layer1 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
         latent1 = ca_layer1(latent_array, embeddings)
 
         # Construct the stacks of Latent Transformers

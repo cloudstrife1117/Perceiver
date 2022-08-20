@@ -47,9 +47,9 @@ class MLP(tf.keras.layers.Layer):
         return x2
 
 
-class CrossAttention(tf.keras.layers.Layer):
+class CrossAttentionTransformer(tf.keras.layers.Layer):
     def __init__(self, proj_dim, num_heads, dropout):
-        super(CrossAttention, self).__init__()
+        super(CrossAttentionTransformer, self).__init__()
         self.proj_dim = proj_dim
         self.num_heads = num_heads
         self.dropout = dropout
