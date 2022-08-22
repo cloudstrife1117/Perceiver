@@ -2,8 +2,11 @@
 @author: Jeng-Chung Lien
 @email: masa67890@gmail.com
 """
+import os
+# Suppress the INFO message
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
-from TransformerModel import TransformerModel
+from Modules.TransformerModel import TransformerModel
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.metrics import SparseCategoricalAccuracy
 

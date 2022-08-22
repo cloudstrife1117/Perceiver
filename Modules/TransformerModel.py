@@ -6,8 +6,8 @@ import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
-from ImagePositionEmbedding import ImagePosEmbed
-from CustomLayers import LatentArray, CrossAttentionTransformer, LatentTransformer
+from .ImagePositionEmbedding import ImagePosEmbed
+from .CustomLayers import LatentArray, CrossAttentionTransformer, LatentTransformer
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.optimizers import Adam

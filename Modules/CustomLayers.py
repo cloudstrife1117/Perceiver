@@ -5,7 +5,7 @@
 import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-from PositionEncodings import learnable_pos_embedding
+from .PositionEncodings import learnable_pos_embedding
 import tensorflow as tf
 from tensorflow.keras.layers import LayerNormalization, Add, Dense, Dropout
 from tensorflow_addons.layers import MultiHeadAttention

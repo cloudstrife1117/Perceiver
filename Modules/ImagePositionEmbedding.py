@@ -5,7 +5,7 @@
 import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-from PositionEncodings import learnable_pos_embedding, generate_fourier_features
+from .PositionEncodings import learnable_pos_embedding, generate_fourier_features
 import tensorflow as tf
 from tensorflow.keras import layers
 
