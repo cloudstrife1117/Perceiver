@@ -25,8 +25,9 @@ def main():
                                  proj_dim=16,
                                  cross_num_heads=1,
                                  self_num_heads=8,
-                                 stack_num=4,
+                                 stack_num=6,
                                  dropout=0.1,
+                                 iter_num=2,
                                  model="Perceiver",
                                  posEmbed="FF")
 
