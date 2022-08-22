@@ -7,11 +7,12 @@ from TransformerModel import TransformerModel
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.metrics import SparseCategoricalAccuracy
 
+
 def main():
     # Load Cifar-10 Dataset
     (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
-    optimizer = "adam"
+    optimizer = "LAMB"
     learning_rate = 0.001
     loss_function = SparseCategoricalCrossentropy(from_logits=True)
     metrics = [SparseCategoricalAccuracy(name='Acc')]
@@ -22,7 +23,9 @@ def main():
                                  classes=10,
                                  latent_num=32,
                                  proj_dim=16,
-                                 num_heads=8,
+                                 cross_num_heads=1,
+                                 self_num_heads=8,
+                                 stack_num=4,
                                  dropout=0.1,
                                  model="Perceiver",
                                  posEmbed="FF")
