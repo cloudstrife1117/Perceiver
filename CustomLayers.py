@@ -89,3 +89,21 @@ class SelfAttentionTransformer(tf.keras.layers.Layer):
         qkv_add2 = Add()([qkv_mlp1, qkv_add1])
 
         return qkv_add2
+
+
+class LatentTransformer(tf.keras.layers.Layer):
+    def __init__(self, proj_dim, num_heads, dropout, stack_num):
+        super(LatentTransformer, self).__init__()
+        self.proj_dim = proj_dim
+        self.num_heads = num_heads
+        self.dropout = dropout
+        self.stack_num = stack_num
+        self.sa_layers = [SelfAttentionTransformer(proj_dim=self.proj_dim,
+                                                   num_heads=self.num_heads,
+                                                   dropout=self.dropout) for _ in range(self.stack_num)]
+
+    def call(self, qkv_input):
+        for i in range(self.stack_num):
+            qkv_input = self.sa_layers[i](qkv_input)
+
+        return qkv_input
