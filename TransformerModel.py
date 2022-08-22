@@ -15,7 +15,7 @@ from tensorflow_addons.optimizers import LAMB
 
 
 class TransformerModel:
-    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, stack_num, dropout, model="Perceiver", posEmbed="FF"):
+    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF"):
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.classes = classes
@@ -25,6 +25,7 @@ class TransformerModel:
         self.self_num_heads = self_num_heads
         self.stack_num = stack_num
         self.dropout = dropout
+        self.iter_num = iter_num
         self.posEmbed = posEmbed
         self.history = None
         if model == "Perceiver":
@@ -47,21 +48,22 @@ class TransformerModel:
 
         # Construct the initial CrossAttention Transformer
         ca_layer1 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout)
-        latent1 = ca_layer1(latent_array, embeddings)
+        latent = ca_layer1(latent_array, embeddings)
 
         # Construct following CrossAttention Transformer to repeat
         ca_layer2 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout)
 
         # Construct the stacks of Latent Transformers
         latent_transformer1 = LatentTransformer(proj_dim=self.proj_dim, num_heads=self.self_num_heads, dropout=self.dropout, stack_num=self.stack_num)
-        latent1 = latent_transformer1(latent1)
+        latent = latent_transformer1(latent)
 
-        # Second iteration
-        latent2 = ca_layer2(latent1, embeddings)
-        latent2 = latent_transformer1(latent2)
+        # Repeat to unroll depth for iter_num-1 times iteration following after first iteration
+        for _ in range(self.iter_num-1):
+            latent = ca_layer2(latent, embeddings)
+            latent = latent_transformer1(latent)
 
         # Average the output of final Latent Transformer with the number of latents(index dimension)
-        mean_latent = tf.reduce_mean(latent2, axis=1)
+        mean_latent = tf.reduce_mean(latent, axis=1)
 
         # Pass the averaged latent trough a linear layer to output the number of classes of logits
         logits = Dense(units=self.classes)(mean_latent)
