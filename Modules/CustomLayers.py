@@ -55,15 +55,16 @@ class CrossAttentionTransformer(tf.keras.layers.Layer):
         self.dropout = dropout
         self.mha_layer = MultiHeadAttention(head_size=self.proj_dim, num_heads=self.num_heads, output_size=self.proj_dim, dropout=self.dropout)
         self.mlp_layer = MLP(proj_dim=self.proj_dim, dropout=self.dropout)
-        self.q_norm_layer = LayerNormalization(epsilon=1e-6)
-        self.kv_norm_layer = LayerNormalization(epsilon=1e-6)
+        self.q_norm_layer1 = LayerNormalization(epsilon=1e-6)
+        self.kv_norm_layer1 = LayerNormalization(epsilon=1e-6)
+        self.q_norm_layer2 = LayerNormalization(epsilon=1e-6)
 
     def call(self, q_input, kv_input):
-        q_norm1 = self.q_norm_layer(q_input)
-        kv_norm1 = self.kv_norm_layer(kv_input)
+        q_norm1 = self.q_norm_layer1(q_input)
+        kv_norm1 = self.kv_norm_layer1(kv_input)
         q_mha = self.mha_layer([q_norm1, kv_norm1, kv_norm1])
         q_add1 = Add()([q_mha, q_input])
-        q_norm2 = self.q_norm_layer(q_add1)
+        q_norm2 = self.q_norm_layer2(q_add1)
         q_mlp1 = self.mlp_layer(q_norm2)
         q_add2 = Add()([q_mlp1, q_add1])
 
@@ -78,13 +79,14 @@ class SelfAttentionTransformer(tf.keras.layers.Layer):
         self.dropout = dropout
         self.mha_layer = MultiHeadAttention(head_size=self.proj_dim, num_heads=self.num_heads, dropout=self.dropout)
         self.mlp_layer = MLP(proj_dim=self.proj_dim, dropout=self.dropout)
-        self.qvk_norm_layer = LayerNormalization(epsilon=1e-6)
+        self.qvk_norm_layer1 = LayerNormalization(epsilon=1e-6)
+        self.qvk_norm_layer2 = LayerNormalization(epsilon=1e-6)
 
     def call(self, qkv_input):
-        qkv_norm = self.qvk_norm_layer(qkv_input)
+        qkv_norm = self.qvk_norm_layer1(qkv_input)
         qkv_mha = self.mha_layer([qkv_norm, qkv_norm, qkv_norm])
         qkv_add1 = Add()([qkv_mha, qkv_input])
-        qkv_norm2 = self.qvk_norm_layer(qkv_add1)
+        qkv_norm2 = self.qvk_norm_layer2(qkv_add1)
         qkv_mlp1 = self.mlp_layer(qkv_norm2)
         qkv_add2 = Add()([qkv_mlp1, qkv_add1])
 
