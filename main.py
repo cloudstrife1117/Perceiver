@@ -19,7 +19,7 @@ def main():
     learning_rate = 0.001
     loss_function = SparseCategoricalCrossentropy(from_logits=True)
     metrics = [SparseCategoricalAccuracy(name='Acc')]
-    epochs = 10
+    epochs = 50
 
     Perceiver = TransformerModel(input_shape=(32, 32, 3),
                                  batch_size=20,
@@ -28,7 +28,8 @@ def main():
                                  proj_dim=16,
                                  cross_num_heads=1,
                                  self_num_heads=8,
-                                 stack_num=6,
+                                 block_num=2,
+                                 stack_num=2,
                                  dropout=0.1,
                                  iter_num=2,
                                  model="Perceiver",
