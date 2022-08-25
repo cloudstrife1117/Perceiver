@@ -15,7 +15,7 @@ from tensorflow_addons.optimizers import LAMB
 
 
 class TransformerModel:
-    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF"):
+    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, block_num, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF"):
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.classes = classes
@@ -23,6 +23,7 @@ class TransformerModel:
         self.proj_dim = proj_dim
         self.cross_num_heads = cross_num_heads
         self.self_num_heads = self_num_heads
+        self.block_num = block_num
         self.stack_num = stack_num
         self.dropout = dropout
         self.iter_num = iter_num
@@ -48,19 +49,26 @@ class TransformerModel:
 
         # Construct the initial CrossAttention Transformer
         ca_layer1 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout)
+
+        # Construct following CrossAttention Transformer to repeat exclude first initial CrossAttention when repeat on after first iteration
+        ca_layers = [CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout) for _ in range(self.block_num)]
+
+        # Construct the multiple stacks of Latent Transformers following each CrossAttention
+        latent_transformers = [LatentTransformer(proj_dim=self.proj_dim, num_heads=self.self_num_heads, dropout=self.dropout, stack_num=self.stack_num) for _ in range(self.block_num)]
+
+        # Pass trough first initial CrossAttention Transformer layer and the first Latent Transformer
         latent = ca_layer1(latent_array, embeddings)
+        latent = latent_transformers[0](latent)
+        # Pass trough the second and following CrossAttention Transformer layer with Latent Transformer each after CrossAttention
+        for i in range(1, self.block_num):
+            latent = ca_layers[i](latent, embeddings)
+            latent = latent_transformers[i](latent)
 
-        # Construct following CrossAttention Transformer to repeat
-        ca_layer2 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout)
-
-        # Construct the stacks of Latent Transformers
-        latent_transformer1 = LatentTransformer(proj_dim=self.proj_dim, num_heads=self.self_num_heads, dropout=self.dropout, stack_num=self.stack_num)
-        latent = latent_transformer1(latent)
-
-        # Repeat to unroll depth for iter_num-1 times iteration following after first iteration
+        # Repeat to unroll depth for iter_num-1 times iteration following after first iteration(shared weights), exclude first inital CrossAttention
         for _ in range(self.iter_num-1):
-            latent = ca_layer2(latent, embeddings)
-            latent = latent_transformer1(latent)
+            for i in range(self.block_num):
+                latent = ca_layers[i](latent, embeddings)
+                latent = latent_transformers[i](latent)
 
         # Average the output of final Latent Transformer with the number of latents(index dimension)
         mean_latent = tf.reduce_mean(latent, axis=1)
