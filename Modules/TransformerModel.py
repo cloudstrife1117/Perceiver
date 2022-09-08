@@ -12,6 +12,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import PolynomialDecay
+from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow_addons.optimizers import LAMB
 
 
@@ -93,7 +94,7 @@ class TransformerModel:
     def summary(self):
         self.model.summary()
 
-    def train(self, X_train, X_val, y_train, y_val, optimizer, init_lr, end_lr, loss, metrics, epochs):
+    def train(self, X_train, X_val, y_train, y_val, optimizer, init_lr, end_lr, loss, metrics, epochs, save_model=False, save_path=None, monitor='loss', mode='min'):
         decay_steps = (len(X_train) / self.batch_size) * epochs
         lr = PolynomialDecay(initial_learning_rate=init_lr, decay_steps=decay_steps, end_learning_rate=end_lr)
 
@@ -109,5 +110,15 @@ class TransformerModel:
         self.model.compile(optimizer=opt, loss=loss, metrics=metrics)
 
         # Train model and record training history
-        history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs=epochs, shuffle=True, validation_data=(X_val, y_val))
+        if save_model:
+            # Add save best model weights checkpoint
+            model_checkpoint_callback = ModelCheckpoint(
+                filepath=save_path,
+                save_weights_only=False,
+                monitor=monitor,
+                mode=mode,
+                save_best_only=True)
+            history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs=epochs, shuffle=True, validation_data=(X_val, y_val), callbacks=[model_checkpoint_callback])
+        else:
+            history = self.model.fit(X_train, y_train, batch_size=self.batch_size, epochs=epochs, shuffle=True, validation_data=(X_val, y_val))
         self.history = history.history

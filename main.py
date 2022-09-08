@@ -22,6 +22,14 @@ def main():
     metrics = [SparseCategoricalAccuracy(name='Acc')]
     epochs = 50
 
+    is_savemode = True  # Set True to save model trough training
+    monitor_metric = 'val_Acc'  # Select the metric name to monitor for saving
+    monitor_metric_objective = 'max'
+
+    model_name = "Perceiver_Model"
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    save_path = ROOT_PATH + "/Models/" + model_name
+
     Perceiver = TransformerModel(input_shape=(32, 32, 3),
                                  batch_size=20,
                                  classes=10,
@@ -49,7 +57,12 @@ def main():
                     end_lr=end_learning_rate,
                     loss=loss_function,
                     metrics=metrics,
-                    epochs=epochs)
+                    epochs=epochs,
+                    save_model=is_savemode,
+                    save_path=save_path,
+                    monitor=monitor_metric,
+                    mode=monitor_metric_objective
+                    )
 
 
 if __name__ == "__main__":
