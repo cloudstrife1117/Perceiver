@@ -19,7 +19,7 @@ class LatentArray(tf.keras.layers.Layer):
         self.latent_num = latent_num
         self.proj_dim = proj_dim
         self.latent_array = self.add_weight(
-            shape=(self.latent_num, self.proj_dim), initializer="random_normal", trainable=True
+            shape=(self.latent_num, self.proj_dim), initializer="random_normal", trainable=True, name="init_latents"
         )
         self.pos_embedding = learnable_pos_embedding(pos_num=self.latent_num, proj_dim=self.proj_dim)
 
