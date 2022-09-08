@@ -5,7 +5,7 @@
 import os
 # Suppress the INFO message
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-from .PositionEncodings import learnable_pos_embedding, generate_fourier_features
+from .PositionEncodings import learnable_pos_embedding, generate_fourier_features, generate_coordinate_positions
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -16,8 +16,8 @@ class ImagePosEmbed(layers.Layer):
         self.batch_size = batch_size
         self.proj_dim = proj_dim
         self.posEmbed = posEmbed
-        self.img_embedding_layer = layers.Dense(units=proj_dim)
         if posEmbed == "learnable":
+            self.img_embedding_layer = layers.Dense(units=proj_dim)
             self.pos_embedding = learnable_pos_embedding(pos_num=pos_num, proj_dim=self.proj_dim)
         elif posEmbed == "FF":
             self.num_bands = num_bands
@@ -35,6 +35,10 @@ class ImagePosEmbed(layers.Layer):
         elif self.posEmbed == "learnable":
             x = self.img_embedding_layer(x)
             x = x + self.pos_embedding
+        elif self.posEmbed == "raw":
+            raw_features = generate_coordinate_positions(input_space=input_space)
+            raw_features = tf.broadcast_to(raw_features, [self.batch_size] + raw_features.shape)
+            x = tf.concat([x, raw_features], axis=-1)
         else:
             raise ValueError("Position Embedding Method doesn't exist!")
 
