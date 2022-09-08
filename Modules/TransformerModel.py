@@ -16,7 +16,7 @@ from tensorflow_addons.optimizers import LAMB
 
 
 class TransformerModel:
-    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, block_num, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF", crop_size=None):
+    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, block_num, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF", numbands=15, crop_size=None):
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.classes = classes
@@ -29,6 +29,7 @@ class TransformerModel:
         self.dropout = dropout
         self.iter_num = iter_num
         self.posEmbed = posEmbed
+        self.num_bands = numbands
         self.crop_size = crop_size
         self.history = None
         if model == "Perceiver":
@@ -53,7 +54,7 @@ class TransformerModel:
         latent_array = latent_array_layer(crop_input)
 
         # Generating position encodings Fourier Features or learnable positions and combining with input
-        embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=crop_input.shape[1]*crop_input.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
+        embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=crop_input.shape[1]*crop_input.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed, num_bands=self.num_bands)
         embeddings = embedding_layer(crop_input)
 
         # Construct the initial CrossAttention Transformer

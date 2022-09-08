@@ -35,6 +35,7 @@ def main():
                                  iter_num=1,
                                  model="Perceiver",
                                  posEmbed="FF",
+                                 numbands=5,
                                  crop_size=(28, 28))
 
     Perceiver.summary()
