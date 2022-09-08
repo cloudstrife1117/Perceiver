@@ -16,7 +16,8 @@ def main():
     (X_train, y_train), (X_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
     optimizer = "LAMB"
-    learning_rate = 0.001
+    init_learning_rate = 0.001
+    end_learning_rate = 0.00000001  # 0.00000001
     loss_function = SparseCategoricalCrossentropy(from_logits=True)
     metrics = [SparseCategoricalAccuracy(name='Acc')]
     epochs = 50
@@ -28,12 +29,13 @@ def main():
                                  proj_dim=16,
                                  cross_num_heads=1,
                                  self_num_heads=8,
-                                 block_num=2,
-                                 stack_num=2,
+                                 block_num=1,
+                                 stack_num=1,
                                  dropout=0.1,
-                                 iter_num=2,
+                                 iter_num=1,
                                  model="Perceiver",
-                                 posEmbed="FF")
+                                 posEmbed="FF",
+                                 crop_size=(28, 28))
 
     Perceiver.summary()
 
@@ -42,7 +44,8 @@ def main():
                     y_train=y_train,
                     y_val=y_test,
                     optimizer=optimizer,
-                    lr=learning_rate,
+                    init_lr=init_learning_rate,
+                    end_lr=end_learning_rate,
                     loss=loss_function,
                     metrics=metrics,
                     epochs=epochs)
