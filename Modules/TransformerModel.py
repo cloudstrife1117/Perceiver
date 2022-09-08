@@ -11,6 +11,7 @@ from .CustomLayers import LatentArray, CrossAttentionTransformer, LatentTransfor
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.schedules import PolynomialDecay
 from tensorflow_addons.optimizers import LAMB
 
 
@@ -57,17 +58,17 @@ class TransformerModel:
         latent_transformers = [LatentTransformer(proj_dim=self.proj_dim, num_heads=self.self_num_heads, dropout=self.dropout, stack_num=self.stack_num) for _ in range(self.block_num)]
 
         # Pass trough first initial CrossAttention Transformer layer and the first Latent Transformer
-        latent = ca_layer1(latent_array, embeddings)
+        latent = ca_layer1([latent_array, embeddings])
         latent = latent_transformers[0](latent)
         # Pass trough the second and following CrossAttention Transformer layer with Latent Transformer each after CrossAttention
         for i in range(1, self.block_num):
-            latent = ca_layers[i](latent, embeddings)
+            latent = ca_layers[i]([latent, embeddings])
             latent = latent_transformers[i](latent)
 
         # Repeat to unroll depth for iter_num-1 times iteration following after first iteration(shared weights), exclude first inital CrossAttention
         for _ in range(self.iter_num-1):
             for i in range(self.block_num):
-                latent = ca_layers[i](latent, embeddings)
+                latent = ca_layers[i]([latent, embeddings])
                 latent = latent_transformers[i](latent)
 
         # Average the output of final Latent Transformer with the number of latents(index dimension)
@@ -83,7 +84,10 @@ class TransformerModel:
     def summary(self):
         self.model.summary()
 
-    def train(self, X_train, X_val, y_train, y_val, optimizer, lr, loss, metrics, epochs):
+    def train(self, X_train, X_val, y_train, y_val, optimizer, init_lr, end_lr, loss, metrics, epochs):
+        decay_steps = (len(X_train) / self.batch_size) * epochs
+        lr = PolynomialDecay(initial_learning_rate=init_lr, decay_steps=decay_steps, end_learning_rate=end_lr)
+
         # Apply optimizer
         if optimizer == 'adam':
             opt = Adam(learning_rate=lr)
