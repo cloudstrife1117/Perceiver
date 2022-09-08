@@ -59,7 +59,9 @@ class CrossAttentionTransformer(tf.keras.layers.Layer):
         self.kv_norm_layer1 = LayerNormalization(epsilon=1e-6)
         self.q_norm_layer2 = LayerNormalization(epsilon=1e-6)
 
-    def call(self, q_input, kv_input):
+    def call(self, qkv_input):
+        q_input = qkv_input[0]
+        kv_input = qkv_input[1]
         q_norm1 = self.q_norm_layer1(q_input)
         kv_norm1 = self.kv_norm_layer1(kv_input)
         q_mha = self.mha_layer([q_norm1, kv_norm1, kv_norm1])
