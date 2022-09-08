@@ -35,7 +35,7 @@ class MLP(tf.keras.layers.Layer):
         super(MLP, self).__init__()
         self.proj_dim = proj_dim
         self.dropout = dropout
-        self.dense1 = Dense(self.proj_dim * 4, activation=gelu)
+        self.dense1 = Dense(self.proj_dim * 1, activation=gelu)
         self.dense2 = Dense(self.proj_dim)
 
     def call(self, inputs):
