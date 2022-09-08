@@ -16,7 +16,7 @@ from tensorflow_addons.optimizers import LAMB
 
 
 class TransformerModel:
-    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, block_num, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF"):
+    def __init__(self, input_shape, batch_size, classes, latent_num, proj_dim, cross_num_heads, self_num_heads, block_num, stack_num, dropout, iter_num, model="Perceiver", posEmbed="FF", crop_size=None):
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.classes = classes
@@ -29,6 +29,7 @@ class TransformerModel:
         self.dropout = dropout
         self.iter_num = iter_num
         self.posEmbed = posEmbed
+        self.crop_size = crop_size
         self.history = None
         if model == "Perceiver":
             self.model = self.Perceiver()
@@ -39,14 +40,21 @@ class TransformerModel:
         # Create Input layer
         inputs = Input(self.input_shape)
 
+        # Generate random crops from original image
+        if self.crop_size is None:
+            crop_input = inputs
+        else:
+            rand_crop_layer = tf.keras.layers.experimental.preprocessing.RandomCrop(height=self.crop_size[0], width=self.crop_size[1])
+            crop_input = rand_crop_layer(inputs)
+
         # inputs are passed to this function as a placeholder for the latent array generation, just to construct the
         # functional model into a graph when it is called where the inputs isn't actually used
         latent_array_layer = LatentArray(batch_size=self.batch_size, latent_num=self.latent_num, proj_dim=self.proj_dim)
-        latent_array = latent_array_layer(inputs)
+        latent_array = latent_array_layer(crop_input)
 
         # Generating position encodings Fourier Features or learnable positions and combining with input
-        embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=inputs.shape[1]*inputs.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
-        embeddings = embedding_layer(inputs)
+        embedding_layer = ImagePosEmbed(batch_size=self.batch_size, pos_num=crop_input.shape[1]*crop_input.shape[2], proj_dim=self.proj_dim, posEmbed=self.posEmbed)
+        embeddings = embedding_layer(crop_input)
 
         # Construct the initial CrossAttention Transformer
         ca_layer1 = CrossAttentionTransformer(proj_dim=self.proj_dim, num_heads=self.cross_num_heads, dropout=self.dropout)
