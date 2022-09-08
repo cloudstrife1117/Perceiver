@@ -27,7 +27,7 @@ class ImagePosEmbed(layers.Layer):
         x = tf.reshape(x, [-1, x.shape[1] * x.shape[2], x.shape[3]])
 
         if self.posEmbed == "FF":
-            fourier_features = generate_fourier_features(num_bands=15, input_space=input_space)
+            fourier_features = generate_fourier_features(num_bands=5, input_space=input_space)
             fourier_features = tf.broadcast_to(fourier_features, [self.batch_size] + fourier_features.shape)
             x = tf.concat([x, fourier_features], axis=-1)
         elif self.posEmbed == "learnable":
