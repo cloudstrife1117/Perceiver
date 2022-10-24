@@ -32,18 +32,18 @@ The Perceiver Model is a transformer model architecture used for classification 
 **Perceiver Model Figure[[3]](#reference_anchor3):**<br/>
 ![Perceiver.png](Figures/Perceiver/Perceiver.png)
 
-* **Perceiver Architecture**
-For the Perceiver model architecture[[3]](#reference_anchor3), here we will be re-writing the terms and the Perceiver model image from the original paper so we have a more clear and detailed explanation. Below we will be explaining the usage of the Perceiver in two ways optionally in the terms of image classification domain. First architecture as Perceiver Stack, and the second architecture as Perceiver Iteration.
+* **Perceiver Architecture**<br/>
+For the Perceiver model architecture[[3]](#reference_anchor3), here we will be re-writing the terms and the Perceiver model image from the original paper so we have a more clear and detailed explanation. Below we will be explaining the usage of the Perceiver in two ways optionally in the terms of image classification domain. First architecture as Perceiver Stack, and the second architecture as Perceiver Iteration.<br/><br/>
 
-    * **Perceiver Stack**
+    * **Perceiver Stack**<br/>
     This architecture uses different cross attention following self attention transformers as a block and stack these blocks X times to add depth and complexity to the model, shown in the image below in more detail.
     <br/><br/>**Perceiver Stack Figure:**<br/>
     ![Perceiver_Stack.png](Figures/Perceiver/Perceiver_Stack.png)<br/><br/>
     First it takes the latent array addition with a 1D learnable position embedding as the query ,and the original image concat with the 2D fourier features as the key and value. These are input into the first cross attention, then it outputs a new latent and would be input into the following self-attention transformer. Then the output from the first block could be used as a new query then input to a different cross attention following self-attention transformer with the original image addition with the 2D fourier features as the key and value. This could be stacked as multiple blocks up to X times to add depth and complexity to the model. The output of the last block then would be averaged over all the vectors of the sequences which would then have a single vector representation of the image to feed in the classifier. The classifier is a multilayer-perceptron(MLP) with sigmoid or softmax activation on the last layer to output the result of the classification.<br/><br/>
     For the time complexity of such a model in terms of input sequence size for the latent array where there are N sequences, the byte array where there are M sequences. The time complexity of the cross attention would be O(N*M), where M > N. For self attention it would be O(N^2). If we don’t ignore the depth of the model, the self-attention transformer here would be L stacks, which would be O(LN^2) for the self-attention transformers. Then for the whole model stacking the blocks X times, it would be O(X(N*M + LN^2)) as the time complexity. Mainly if we use the same amount of self-attention as the depth with O(M^2) it would be much less then the time complexity of simply using a full self-attention on raw image pixels.<br/><br/>
     For the space complexity of the model in the viewpoint of the memory is increased from zero, basically the toral parameter size of the model in memory. Here the space complexity would be O(X(N*M + LN^2)).
-    
-    * **Perciver Iteration**
+    <br/><br/>
+    * **Perciver Iteration**<br/>
     Different from the architecture above, the architecture here uses a Recurrent Neural Network(RNN) like structure to iterate on the same weights of a block to add depth and complexity to the model, shown in the image below in more detail.
     <br/><br/>**Perceiver Iteration Figure:**<br/>
     ![Perceiver_iter.png](Figures/Perceiver/Perceiver_iter.png)<br/><br/>
@@ -51,7 +51,7 @@ For the Perceiver model architecture[[3]](#reference_anchor3), here we will be r
     Then in block 1’ it takes the output as a new query and inputs again like a RNN, this is repeated i-2 times. If i=1, the block 1 output is directly input to the average instead. Total iteration is i times, where one time is the initial different cross attention. The last output of the block 1’(iter i output) then would be averaged over all the vectors of the sequences which would then have a single vector representation of the image to feed in the classifier. The classifier is a multilayer-perceptron(MLP) with sigmoid or softmax activation on the last layer to output the result of the classification.<br/><br/>
     For the time complexity of such a model in terms of input sequence size for the latent array where there are N sequences, the byte array where there are M sequences. The time complexity of the cross attention would be O(N*M), where M > N. For self attention it would be O(N^2). If we don’t ignore the depth of the model, the self-attention transformer here would be L stacks, which would be O(LN^2) for the self-attention transformers. Then for the whole model iterating the block i times, it would be O(i(N*M + LN^2)) as the time complexity. If i=X from the Perceiver Stack architecture it would be the same time complexity.<br/><br/>
     However, from the view of space complexity. Where only the first initial cross attention is using a different weight other cross attention and self attention are using the same weight, the space complexity for such architecture would be O(2(N*M) + LN^2) which is much less than the space complexity of the Perceiver Stack architecture O(X(N*M + LN^2)) if same depth.
-    
+    <br/><br/>
     * **Components**
     Here we will be explaining the components of the model, the latent array, the byte array, the 1D learnable position encoding, the fourier features, the self attention transformer, the cross attention transformer, average and MLP.
         * **Latent Array:** The latent array here is a learnable array, where there are N multiple vectors with dimension D. The latent array is initially random initialized and would learn and update on later training.
@@ -81,17 +81,17 @@ For the Perceiver model architecture[[3]](#reference_anchor3), here we will be r
 ## Perceiver Experiment
 Here we will be performing the experiment using different hyperparameters, number of blocks (cross attention transformer following self-attention transformer as a block), number of stacks (the number L in self-attention transformer mentioned in the Components of Perceiver Model section), number of iterations (the number i of iterations mentioned in the Perceiver Stack of Perceiver Model section), the number of latents (the number of sequence N of latent array), and the projection dimension (the D neurons of each of the linear layers through the whole network). First we will perform with small numbers to get a grasp of how each of the hyperparameters work on a small dataset, then we will train a model using more optimal hyperparameters to see how good the performance is. Different from the original Perceiver paper, which they perform on a medium dataset imagenet, here we are experimenting on a small dataset Cifar-10[[4]](#reference_anchor4) to see how the model would perform.<br/><br/>
 Here we used some of the same settings on all the perceiver models structure and training parameters shown below:
-**-Cross Attention Heads:** 1 head
-**-Self-Attention Heads:** 8 heads
-**-Number of Frequency Bands:** 5 bands (increase of bands here would lead to worse performance)
-**-Random Crop Size:** 28x28
-**-Dropout Probability:** 0.1 through the whole network
-**-Optimizer:** LAMB optimizer without weight decay
-**-Learning mode:** A step learning rate decay(initial 0.001, end 0.00000001)
-**-Batch size:** Using batch size of 20 to train
-**-Epochs:** Using 50 epochs to train
-**-Loss Function:** Sparse Categorical Cross Entropy
-**-Evaluation Metric:** Top-1 Accuracy
+<br/>**-Cross Attention Heads:** 1 head
+<br/>**-Self-Attention Heads:** 8 heads
+<br/>**-Number of Frequency Bands:** 5 bands (increase of bands here would lead to worse performance)
+<br/>**-Random Crop Size:** 28x28
+<br/>**-Dropout Probability:** 0.1 through the whole network
+<br/>**-Optimizer:** LAMB optimizer without weight decay
+<br/>**-Learning mode:** A step learning rate decay(initial 0.001, end 0.00000001)
+<br/>**-Batch size:** Using batch size of 20 to train
+<br/>**-Epochs:** Using 50 epochs to train
+<br/>**-Loss Function:** Sparse Categorical Cross Entropy
+<br/>**-Evaluation Metric:** Top-1 Accuracy
 
 * **Hyperparameter Testing**
     * **Accuracy on Blocks and Stacks**
@@ -151,20 +151,20 @@ The initial cross attention output iter 1, then would be fed into the self-atten
 In this section, we will be experimenting with the vision perceiver model with different parameters and methods. At first, the vision perceiver model is designed the same as the perceiver stack mentioned in the perceiver model. However, we found out that different from the perceiver model where the original paper mentioned that placing a self-attention transformer between the cross-attention will have better performance[[3]](#reference_anchor3), the vision perceiver will have a better performance by placing all the cross-attention at start then a self-attention. This is probably due to the different features the query is representing and learning so the performance differs from such structure. We also perform the same as the perceiver stack, stacking different cross-attention instead of iterating it in the vision perceiver model. The iteration of the vision perceiver would have a better generalization and wouldn’t overfit much compared to the stack version of it, this is similar to the iteration version of the perceiver mentioned in the original paper that it generalizes better by iterating[[3]](#reference_anchor3). Hence we use the model mentioned above as the vision perceiver(modified perceiver model) to test different parameters and methods, where we found that by using one self-attention transformer and four iterations only (due to limited hardware computation) it has the best performance. First we will be training the model directly with such a setting. Then we will perform data augmentation to see how much we could improve the model. Last, we will be adding weight decay and adding the dimension of the model to see how we could boost the performance.
 
 Here we used some of the same settings on all the vision perceiver models structure and training parameters shown below:
-**-Cross Attention Heads:** 1 head
-**-Self-Attention Heads:** 8 heads
-**-Self-Attention Stacks:** 1 stack
-**-Total Iterations:** 4 iteration
-**-Number of Frequency Bands:** 5 bands (increase of bands here would lead to worse performance)
-**-Random Crop Size:** 28x28
-**-Patch Size:** 4x4
-**-Stride:** 2 pixels
-**-Number of Latents(Calculated from patch size and stride, which is fixed):** 169
-**-Dropout Probability:** 0.1 through the whole network
-**-Learning mode:** A step learning rate decay(initial 0.001, end 0.00000001)
-**-Batch size:** Using batch size of 20 to train
-**-Loss Function:** Sparse Categorical Cross Entropy
-**-Evaluation Metric:** Top-1 Accuracy
+<br/>**-Cross Attention Heads:** 1 head
+<br/>**-Self-Attention Heads:** 8 heads
+<br/>**-Self-Attention Stacks:** 1 stack
+<br/>**-Total Iterations:** 4 iteration
+<br/>**-Number of Frequency Bands:** 5 bands (increase of bands here would lead to worse performance)
+<br/>**-Random Crop Size:** 28x28
+<br/>**-Patch Size:** 4x4
+<br/>**-Stride:** 2 pixels
+<br/>**-Number of Latents(Calculated from patch size and stride, which is fixed):** 169
+<br/>**-Dropout Probability:** 0.1 through the whole network
+<br/>**-Learning mode:** A step learning rate decay(initial 0.001, end 0.00000001)
+<br/>**-Batch size:** Using batch size of 20 to train
+<br/>**-Loss Function:** Sparse Categorical Cross Entropy
+<br/>**-Evaluation Metric:** Top-1 Accuracy
 
 First, by training the model with 128 projection dimension, 50 epochs, and LAMB optimizer without weight decay we could get a model accuracy around 75%. Then by using data augmentation where we randomly flip the image horizontally and shift the image 10% around filling the missing pixels with reflection with the same epoch and optimizer, we could get a model accuracy around 77% which is a 2% improvement. Last, by using data augmentation, adding a weight decay of 0.1, changing the dimension to 256, and training with 200 epochs we could get a model accuracy of 82.52% and should increase more if trained with more epochs. The table of results shown below, where comparing the accuracy of the perceiver model and vision perceiver, the vision perceiver has an improvement of 14% with such a method on this small dataset. The vision perceiver model is named as the structure of ViP_{latent_num}_{proj_dim}_{stack_num}_{iterations}.
 
